@@ -1,0 +1,26 @@
+if test x$2 = x; then
+   echo usage is: make-libgodot.framework GODOT_DIR OUTPUT_DIR
+   echo provide the base directory to where your LibGodot was built
+   exit 1
+fi
+DIR=$1
+ODIR=$2
+rm -rf $ODIR/libgodot.xcframework
+tmp=/tmp/dir-$$
+mkdir $tmp
+cp $DIR/core/extension/gdextension_interface.h $tmp/gdextension_interface.h
+cp $DIR/core/extension/libgodot.h $tmp/libgodot.h
+cat > $tmp/module.modulemap << EOF
+module libgodot {
+    header "libgodot.h"
+    export *
+}
+EOF
+
+libraries=""
+for f in $DIR/bin/libgodot.ios*.a
+do
+    libraries="$libraries -library $f -headers $tmp"
+done
+xcodebuild -create-xcframework $libraries -output $ODIR/libgodot.xcframework
+rm -rf /tmp/dir-$$
